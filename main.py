@@ -54,6 +54,59 @@ class CreateOrganisationCredentials():
         self.master.destroy()
 
 
+class LoginOrganisationCredentials():
+
+    def __init__(self, master, keydirpath, editor):
+        self.editor = editor
+        self.keydirpath = keydirpath
+        self.master = Toplevel(master)
+        self.master.protocol("WM_DELETE_WINDOW", self.on_closing)
+        self.master.title("Organisation Credentials")
+        self.canvas = Canvas(self.master,
+        highlightthickness=0)
+        self.canvas.pack(expand=YES, fill=BOTH)
+        self.canvas.configure(background='#2D2D2D')
+
+        self.name = Label(self.master, text="Name:")
+        self.name.place(relx=0.1, rely=0.1)
+        self.nameVal = Entry(self.master)
+        self.nameVal.place(relx=0.3, rely=0.1)
+
+        self.password = Label(self.master, text="Password:")
+        self.password.place(relx=0.0, rely=0.4)
+        self.passwordVal = Entry(self.master)
+        self.passwordVal.place(relx=0.3, rely=0.4)
+
+        self.enter = Button(self.master, text='Create', command=self.validate)
+        self.enter.place(relx=0.45, rely=0.7)
+
+    def validate(self):
+        organisation = self.nameVal.get()
+        password = self.passwordVal.get()
+        if (len(organisation) == 0 or len(password) == 0):
+            messagebox.showerror("Error", "Please provide valid inputs for organisation and password!")
+        else:
+            fs = FileSystem(self.keydirpath)
+            try:
+                fs.getOrganisationKey(organisation, password)
+                # change the currently logged in organisation
+                ORGANISATION, PASSWORD = organisation, password
+                messagebox.showinfo(title="Success",
+                message="Successfully logged in to "+organisation)
+                self.editor.configure(state=NORMAL)
+                self.master.destroy()
+            except FileNotFoundError:
+                messagebox.showerror("Error", "Organisation not found!")
+            except ValueError:
+                messagebox.showerror("Error", "Invalid Password!")
+
+
+    def on_closing(self):
+        self.editor.configure(state=NORMAL)
+        self.master.destroy()
+
+
+
 class Application(object):
 
     def __init__(self, master):
@@ -66,7 +119,7 @@ class Application(object):
         height=WINDOW_HEIGHT,
         highlightthickness=0,
         padx=20,
-        pad_y=20,
+        pady=20,
         fg="white",
         background="#292C33")
         self.editor.pack()
@@ -121,7 +174,7 @@ class Application(object):
         menu.add_cascade(labe="Edit", menu=edit)
 
         organisation = Menu(menu)
-        organisation.add_command(label="Login")
+        organisation.add_command(label="Login", command=self.login)
         organisation.add_command(label="Create Organisation", command=self.create_organisation)
         organisation.add_command(label="View Organisations")
         menu.add_cascade(label="Organisation", menu=organisation)
@@ -148,6 +201,11 @@ class Application(object):
         filetypes=[("encrypted files", "*.enc")])
         if(selected_file != None):
             pass
+
+    def login(self):
+        # prompt the user for an organisation name and password
+        self.editor.configure(state=DISABLED)
+        popup = LoginOrganisationCredentials(self.master, self.localkeys_dir, self.editor)
 
     def create_organisation(self):
         # prompt the user for an organisation name and password
