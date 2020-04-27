@@ -16,6 +16,7 @@ class CreateOrganisationCredentials():
         self.editor = editor
         self.keydirpath = keydirpath
         self.master = Toplevel(master)
+        self.master.protocol("WM_DELETE_WINDOW", self.on_closing)
         self.master.title("Organisation Credentials")
         self.canvas = Canvas(self.master,
         highlightthickness=0)
@@ -43,9 +44,14 @@ class CreateOrganisationCredentials():
         else:
             fs = FileSystem(self.keydirpath)
             fs.createOrganisation(organisation, password)
+            # change the currently logged in organisation
             ORGANISATION, PASSWORD = organisation, password
             self.editor.configure(state=NORMAL)
             self.master.destroy()
+
+    def on_closing(self):
+        self.editor.configure(state=NORMAL)
+        self.master.destroy()
 
 
 class Application(object):
@@ -60,6 +66,7 @@ class Application(object):
         height=WINDOW_HEIGHT,
         highlightthickness=0,
         padx=20,
+        pad_y=20,
         fg="white",
         background="#292C33")
         self.editor.pack()
@@ -146,7 +153,6 @@ class Application(object):
         # prompt the user for an organisation name and password
         self.editor.configure(state=DISABLED)
         popup = CreateOrganisationCredentials(self.master, self.localkeys_dir, self.editor)
-
 
 
 if __name__ == '__main__':
