@@ -2,6 +2,8 @@ from tkinter import *
 from tkinter import filedialog
 from tkinter import messagebox
 from filesystem import FileSystem
+from pygments import lex
+from pygments.lexers import PythonLexer
 
 # constants are declared here
 WINDOW_WIDTH = 100
@@ -124,7 +126,7 @@ class Application(object):
         background="#292C33")
         self.editor.pack()
 
-        self.master.bind('<Key>', self.text_changed)
+        self.master.bind('<KeyRelease>', self.text_changed)
 
         # represents whether the current text in the editor is saved or not
         self.saved = False
@@ -138,11 +140,15 @@ class Application(object):
 
         self.currentFile = None
 
+    def get_words(self, text):
+        return get_words
+
     def text_changed(self, event):
         if((event.keycode >= 97 and event.keycode <= 122) or
         (event.keycode >= 65 and event.keycode <= 90)):
             editor_text = self.editor.get("1.0", END)
-            print('text changed')
+            self.editor.tag_add("import", "1.0", "1.6")
+            self.editor.tag_config("import", foreground="blue")
 
     def get_localkeys_dir(self):
         localkeys_dir = filedialog.askdirectory(initialdir="./localkeys")
