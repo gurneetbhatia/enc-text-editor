@@ -7,9 +7,13 @@ from filesystem import FileSystem
 WINDOW_WIDTH = 100
 WINDOW_HEIGHT = 70
 
+ORGANISATION = None
+PASSWORD = None
+
 class CreateOrganisationCredentials():
 
-    def __init__(self, master, keydirpath):
+    def __init__(self, master, keydirpath, editor):
+        self.editor = editor
         self.keydirpath = keydirpath
         self.master = Toplevel(master)
         self.master.title("Organisation Credentials")
@@ -39,6 +43,8 @@ class CreateOrganisationCredentials():
         else:
             fs = FileSystem(self.keydirpath)
             fs.createOrganisation(organisation, password)
+            ORGANISATION, PASSWORD = organisation, password
+            self.editor.configure(state=NORMAL)
             self.master.destroy()
 
 
@@ -69,7 +75,7 @@ class Application(object):
         self.password = None
 
     def get_localkeys_dir(self):
-        localkeys_dir = filedialog.askdirectory(initialdir="./")
+        localkeys_dir = filedialog.askdirectory(initialdir="./localkeys")
         return localkeys_dir if localkeys_dir != None else "localkeys"
 
     def init_menu(self):
@@ -138,8 +144,8 @@ class Application(object):
 
     def create_organisation(self):
         # prompt the user for an organisation name and password
-        print('here1')
-        popup = CreateOrganisationCredentials(self.master, self.localkeys_dir)
+        self.editor.configure(state=DISABLED)
+        popup = CreateOrganisationCredentials(self.master, self.localkeys_dir, self.editor)
 
 
 
