@@ -5,11 +5,16 @@ from pygments.formatters import HtmlFormatter
 from bs4 import BeautifulSoup
 
 #styles = HtmlFormatter().get_style_defs('.highlight .k')
-styles = HtmlFormatter(style='colorful').style.styles
+styles = HtmlFormatter(style='xcode').style.styles
 #'[color=#008000]print[/color]([color=#BA2121]"hello world"[/color])\n'
 
 def getColour(token):
-    return styles[token]
+    try:
+        style_token = styles[token]
+        index = style_token.index('#')
+        return style_token[index:index+7]
+    except ValueError:
+        return ''
 
 def getColours(code):
     tokens = lex(code, PythonLexer())
@@ -18,12 +23,13 @@ def getColours(code):
     # data[x][0] -- startindex
     # data[x][1] -- endindex
     # data[x][2] -- colour
+    # data[x][3] -- tag type
     data = []
     for token in list(tokens):
         #import
-        endindex = startindex + len(token[1]) - 1
+        endindex = startindex + len(token[1])
         colour = getColour(token[0])
-        data.append([startindex, endindex, colour])
+        data.append([startindex, endindex, colour, token[0], token[1]])
         startindex = endindex + 1
     return data
 

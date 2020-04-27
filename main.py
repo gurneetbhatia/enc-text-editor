@@ -4,6 +4,7 @@ from tkinter import messagebox
 from filesystem import FileSystem
 from pygments import lex
 from pygments.lexers import PythonLexer
+from lexer import *
 
 # constants are declared here
 WINDOW_WIDTH = 100
@@ -147,8 +148,40 @@ class Application(object):
         if((event.keycode >= 97 and event.keycode <= 122) or
         (event.keycode >= 65 and event.keycode <= 90)):
             editor_text = self.editor.get("1.0", END)
-            self.editor.tag_add("import", "1.0", "1.6")
-            self.editor.tag_config("import", foreground="blue")
+            #self.editor.tag_add("import", "1.0", "1.6")
+            #self.editor.tag_config("import", foreground="blue")
+            #lines = editor_text.split('\n')[:-1]
+            #print(lines)
+            line = self.editor.get('end - 1 lines linestart', 'end - 1 lines lineend')
+            line_num = self.editor.index(INSERT)
+            line_num_start = float(line_num.split('.')[0]+".0")
+
+            print(line_num, line)
+            line_data = getColours(line)
+            print(line_data)
+            for datapoint in line_data:
+                if datapoint[1] != '':
+                    word_start_index = line_num_start + float('0.'+(str(datapoint[0])))
+                    word_end_index = line_num_start + float('0.'+(str(datapoint[0])))
+                    colour = datapoint[2]
+                    print('(',word_start_index,', ',word_end_index,'): '+colour)
+                    self.editor.tag_add(str(datapoint[3]), str(word_start_index), str(word_end_index))
+                    self.editor.tag_config(str(datapoint[3]), background=colour)
+                    print()
+                    print()
+                    print()
+            '''for (index, line) in enumerate(lines):
+                print(index, line, 'here')
+                line_start = self.editor.get(str(index+1)+".0")
+                line_end = str(index+1)+"."+str(len(line))
+                line_data = getColours(line)
+                for datapoint in line_data:
+                    startindex = str(index+1)+"."+str(datapoint[0])
+                    endindex = str(index+1)+"."+str(datapoint[1])
+                    self.editor.tag_add(str(datapoint[3]), startindex, endindex)
+                    colour = datapoint[2]
+                    print('('+startindex+', '+endindex+'): '+colour)
+                    self.editor.tag_config(str(datapoint[3]), background=colour)'''
 
     def get_localkeys_dir(self):
         localkeys_dir = filedialog.askdirectory(initialdir="./localkeys")
