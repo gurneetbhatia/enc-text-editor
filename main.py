@@ -2,22 +2,25 @@ from tkinter import *
 from filesystem import FileSystem
 
 # constants are declared here
-WINDOW_WIDTH = 600
-WINDOW_HEIGHT = 700
+WINDOW_WIDTH = 100
+WINDOW_HEIGHT = 100
+
 
 class Application(object):
 
     def __init__(self, master):
         self.master = master
         self.master.title("Molecule")
-        self.canvas = Canvas(self.master,
-        width=WINDOW_WIDTH,
-        height=WINDOW_HEIGHT,
-        highlightthickness=0)
-        self.canvas.pack(expand=YES, fill=BOTH)
-        self.canvas.configure(background='#292C33')
 
         self.init_menu()
+        self.editor = Text(self.master,
+        width=WINDOW_WIDTH,
+        height=WINDOW_HEIGHT,
+        highlightthickness=0,
+        fg="white",
+        background="#292C33")
+        self.editor.pack()
+
 
     def init_menu(self):
         menu = Menu(self.master)
@@ -68,7 +71,7 @@ class Application(object):
         help = Menu(menu)
         help.add_command(label="Instructions")
         help.add_command(label="Welcome Guide")
-        help.add_cascade(label="Help", menu=help)
+        menu.add_cascade(label="Help", menu=help)
 
 
 
