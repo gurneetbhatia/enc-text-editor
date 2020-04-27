@@ -7,9 +7,6 @@ from filesystem import FileSystem
 WINDOW_WIDTH = 100
 WINDOW_HEIGHT = 70
 
-ORGANISATION = None
-PASSWORD = None
-
 class CreateOrganisationCredentials():
 
     def __init__(self, master, keydirpath, editor):
@@ -45,7 +42,7 @@ class CreateOrganisationCredentials():
             fs = FileSystem(self.keydirpath)
             fs.createOrganisation(organisation, password)
             # change the currently logged in organisation
-            ORGANISATION, PASSWORD = organisation, password
+            Application.organisation, Application.password = organisation, password
             self.editor.configure(state=NORMAL)
             self.master.destroy()
 
@@ -77,7 +74,7 @@ class LoginOrganisationCredentials():
         self.passwordVal = Entry(self.master)
         self.passwordVal.place(relx=0.3, rely=0.4)
 
-        self.enter = Button(self.master, text='Create', command=self.validate)
+        self.enter = Button(self.master, text='Login', command=self.validate)
         self.enter.place(relx=0.45, rely=0.7)
 
     def validate(self):
@@ -90,7 +87,7 @@ class LoginOrganisationCredentials():
             try:
                 fs.getOrganisationKey(organisation, password)
                 # change the currently logged in organisation
-                ORGANISATION, PASSWORD = organisation, password
+                Application.organisation, Application.password = organisation, password
                 messagebox.showinfo(title="Success",
                 message="Successfully logged in to "+organisation)
                 self.editor.configure(state=NORMAL)
@@ -108,6 +105,9 @@ class LoginOrganisationCredentials():
 
 
 class Application(object):
+
+    organisation = None
+    password = None
 
     def __init__(self, master):
         self.master = master
@@ -131,8 +131,10 @@ class Application(object):
 
         self.fs = FileSystem(self.localkeys_dir)
 
-        self.organisation = None
-        self.password = None
+        Application.organisation = None
+        Application.password = None
+
+        self.currentFile = None
 
     def get_localkeys_dir(self):
         localkeys_dir = filedialog.askdirectory(initialdir="./localkeys")
@@ -146,6 +148,7 @@ class Application(object):
         file.add_command(label="Load File", command=self.load_file)
         file.add_command(label="Import File", command=self.load_file)
         file.add_command(label="Save File")
+        file.add_command(label="Save As...")
         file.add_command(label="Decrypt File")
         menu.add_cascade(label="File", menu=file)
 
@@ -196,11 +199,38 @@ class Application(object):
     def load_file(self):
         # ask the user to select a file
         # change the initialdir arg later
-        selected_file = filedialog.askopenfile(mode='r',
-        initialdir='./',
-        filetypes=[("encrypted files", "*.enc")])
-        if(selected_file != None):
-            pass
+        print(Application.organisation, Application.password)
+        if(Application.organisation == None or Application.password == None):
+            # the user needs to be prompted to login first
+            self.login()
+        else:
+            selected_file = filedialog.askopenfile(mode='r',
+            initialdir='./',
+            filetypes=[("encrypted files", "*.enc")])
+            if(selected_file != None):
+                # need to save the current file before proceeding
+                if((not self.saved) and self.currentFile != None):
+                    # prompt the user asking them if they would like to save their changes
+                    resp = messagebox.askquestion("Save current file",
+                    "You have some unsaved changes in your current file. Would you like to save it?",
+                    icon='warning')
+                    if resp == 'yes':
+                        # save the current contents of the file
+                        pass
+                # show the decrypted contents to the user
+                print(selected_file.name)
+                try:
+                    decrypted_contents = self.fs.readFile(selected_file.name,
+                    Application.organisation,
+                    Application.password)
+                    print(decrypted_contents)
+                    self.currentFile = selected_file.name
+                    self.editor.delete(1.0, END)
+                    self.editor.insert(END, decrypted_contents)
+                except ValueError:
+                    messagebox.showerror('Error',
+                    'Credentials Invalid for the selected file')
+
 
     def login(self):
         # prompt the user for an organisation name and password
