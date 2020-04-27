@@ -65,6 +65,11 @@ class Application(object):
         run.add_command(label="Run with Arguments")
         menu.add_cascade(label="Run", menu=run)
 
+        help = Menu(menu)
+        help.add_command(label="Instructions")
+        help.add_command(label="Welcome Guide")
+        help.add_cascade(label="Help", menu=help)
+
 
 
 
