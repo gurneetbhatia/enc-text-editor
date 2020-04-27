@@ -27,7 +27,7 @@ def getColours(code):
     data = []
     for token in list(tokens):
         #import
-        endindex = startindex + len(token[1])
+        endindex = startindex + len(token[1]) - 1
         colour = getColour(token[0])
         data.append([startindex, endindex, colour, token[0], token[1]])
         startindex = endindex + 1

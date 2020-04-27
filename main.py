@@ -162,11 +162,11 @@ class Application(object):
             for datapoint in line_data:
                 if datapoint[1] != '':
                     word_start_index = line_num_start + float('0.'+(str(datapoint[0])))
-                    word_end_index = line_num_start + float('0.'+(str(datapoint[0])))
+                    word_end_index = line_num_start + float('0.'+(str(datapoint[1]+1)))
                     colour = datapoint[2]
                     print('(',word_start_index,', ',word_end_index,'): '+colour)
                     self.editor.tag_add(str(datapoint[3]), str(word_start_index), str(word_end_index))
-                    self.editor.tag_config(str(datapoint[3]), background=colour)
+                    self.editor.tag_config(str(datapoint[3]), foreground=colour)
                     print()
                     print()
                     print()
