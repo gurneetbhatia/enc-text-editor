@@ -1,1 +1,2 @@
 cryptography==2.9.2
+Pygments==2.6.1
