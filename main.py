@@ -124,6 +124,9 @@ class Application(object):
         background="#292C33")
         self.editor.pack()
 
+        self.editor_text = ''
+        self.master.bind('<Key>', self.text_changed)
+
         # represents whether the current text in the editor is saved or not
         self.saved = False
 
@@ -135,6 +138,14 @@ class Application(object):
         Application.password = None
 
         self.currentFile = None
+
+    def text_changed(self, event):
+        editor_text = self.editor.get("1.0", END)
+        if((event.keycode >= 97 and event.keycode <= 122) or
+        (event.keycode >= 65 and event.keycode <= 90)):
+            print('text changed')
+            self.editor_text = editor_text
+            print(self.editor_text)
 
     def get_localkeys_dir(self):
         localkeys_dir = filedialog.askdirectory(initialdir="./localkeys")
