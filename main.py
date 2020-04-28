@@ -127,7 +127,7 @@ class Application(object):
         background="#292C33")
         self.editor.pack()
 
-        self.master.bind('<KeyRelease>', self.text_changed)
+        #self.master.bind('<KeyRelease>', self.text_changed)
 
         # represents whether the current text in the editor is saved or not
         self.saved = False
@@ -167,21 +167,6 @@ class Application(object):
                     print('(',word_start_index,', ',word_end_index,'): '+colour)
                     self.editor.tag_add(str(datapoint[3]), str(word_start_index), str(word_end_index))
                     self.editor.tag_config(str(datapoint[3]), foreground=colour)
-                    print()
-                    print()
-                    print()
-            '''for (index, line) in enumerate(lines):
-                print(index, line, 'here')
-                line_start = self.editor.get(str(index+1)+".0")
-                line_end = str(index+1)+"."+str(len(line))
-                line_data = getColours(line)
-                for datapoint in line_data:
-                    startindex = str(index+1)+"."+str(datapoint[0])
-                    endindex = str(index+1)+"."+str(datapoint[1])
-                    self.editor.tag_add(str(datapoint[3]), startindex, endindex)
-                    colour = datapoint[2]
-                    print('('+startindex+', '+endindex+'): '+colour)
-                    self.editor.tag_config(str(datapoint[3]), background=colour)'''
 
     def get_localkeys_dir(self):
         localkeys_dir = filedialog.askdirectory(initialdir="./localkeys")
@@ -193,7 +178,7 @@ class Application(object):
         file = Menu(menu)
         file.add_command(label="New File", command=self.new_file)
         file.add_command(label="Load File", command=self.load_file)
-        file.add_command(label="Import File", command=self.load_file)
+        file.add_command(label="Import File", command=self.import_file)
         file.add_command(label="Save File")
         file.add_command(label="Save As...")
         file.add_command(label="Decrypt File")
@@ -277,6 +262,35 @@ class Application(object):
                 except ValueError:
                     messagebox.showerror('Error',
                     'Credentials Invalid for the selected file')
+
+    def import_file(self):
+        if(Application.organisation == None or Application.password == None):
+            # the user needs to be prompted to login first
+            self.login()
+        else:
+            selected_file = filedialog.askopenfile(mode='r',
+            initialdir='./',
+            filetypes=[("python files", "*.py")])
+            if(selected_file != None):
+                # need to save the current file before proceeding
+                if((not self.saved) and self.currentFile != None):
+                    # prompt the user asking them if they would like to save their changes
+                    resp = messagebox.askquestion("Save current file",
+                    "You have some unsaved changes in your current file. Would you like to save it?",
+                    icon='warning')
+                    if resp == 'yes':
+                        # save the current contents of the file
+                        pass
+                decrypted_file = open(selected_file.name, 'r')
+                decrypted_contents = decrypted_file.read()
+                decrypted_file.close()
+                self.fs.createFile(selected_file.name, Application.organisation,
+                Application.password, decrypted_contents)
+                self.currentFile = selected_file.name
+                self.editor.delete(1.0, END)
+                self.editor.insert(END, decrypted_contents)
+
+
 
 
     def login(self):

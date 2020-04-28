@@ -1,11 +1,11 @@
 from pygments import highlight
 from pygments import lex
-from pygments.lexers import PythonLexer
+from pygments.lexers import Python3Lexer
 from pygments.formatters import HtmlFormatter
 from bs4 import BeautifulSoup
 
 #styles = HtmlFormatter().get_style_defs('.highlight .k')
-styles = HtmlFormatter(style='xcode').style.styles
+styles = HtmlFormatter(style='fruity').style.styles
 #'[color=#008000]print[/color]([color=#BA2121]"hello world"[/color])\n'
 
 def getColour(token):
@@ -17,7 +17,7 @@ def getColour(token):
         return ''
 
 def getColours(code):
-    tokens = lex(code, PythonLexer())
+    tokens = lex(code, Python3Lexer())
     startindex = 0
     endindex = 0
     # data[x][0] -- startindex
