@@ -179,8 +179,8 @@ class Application(object):
         file.add_command(label="New File", command=self.new_file)
         file.add_command(label="Load File", command=self.load_file)
         file.add_command(label="Import File", command=self.import_file)
-        file.add_command(label="Save File")
-        file.add_command(label="Save As...")
+        file.add_command(label="Save File", command=self.save_file)
+        file.add_command(label="Save As...", command=self.save_file_as)
         file.add_command(label="Decrypt File")
         menu.add_cascade(label="File", menu=file)
 
@@ -289,6 +289,31 @@ class Application(object):
                 self.currentFile = selected_file.name
                 self.editor.delete(1.0, END)
                 self.editor.insert(END, decrypted_contents)
+
+    def save_file(self, filename=None):
+        # if filename not provided, save contents to currentFile
+        if(Application.organisation == None or Application.password == None):
+            self.login()
+        else:
+            # ask the user for a filepath
+            # has to be saved as an enc file
+            if (not self.saved):
+                editor_text = self.editor.get("1.0", END)
+                if (self.currentFile == None and filename == None):
+                    self.save_file_as()
+                else:
+                    selected_file = self.currentFile if filename == None else filename
+                    if (selected_file != None):
+                        self.fs.updateFile(selected_file,
+                        editor_text,
+                        Application.organisation,
+                        Application.password)
+
+    def save_file_as(self):
+        selected_file = filedialog.asksaveasfilename(
+        initialdir='../',
+        filetypes=[("encrypted files", "*.enc")])
+        self.save_file(selected_file)
 
 
 
