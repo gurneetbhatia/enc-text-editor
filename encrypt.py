@@ -10,7 +10,7 @@ import os
 text provided is encrypted with an AES key
 the AES key is encrypted with RSA encryption
 '''
-class Encrypt1:
+class Encrypt:
     def __init__(self, keys=None):
         # keys[0] is the private key to encrypt/decrypt the aes key
         # keys[1] is the aes key to encrypt/decrypt the strings
@@ -77,7 +77,7 @@ class Encrypt1:
 
 
 
-class Encrypt:
+'''class Encrypt:
     def __init__(self, key=None):
         # optional argument of key allows the user to load pre-existent keys
         self.privateKey = self.getNewKey() if key==None else key
@@ -106,6 +106,6 @@ class Encrypt:
         algorithm=hashes.SHA256(),
         label=None
         ))
-        return msg.decode('utf-8')
+        return msg.decode('utf-8')'''
 
     #def run(self, filepath, organisation, password):
