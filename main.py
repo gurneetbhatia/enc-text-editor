@@ -313,7 +313,8 @@ class Application(object):
         selected_file = filedialog.asksaveasfilename(
         initialdir='../',
         filetypes=[("encrypted files", "*.enc")])
-        self.save_file(selected_file)
+        if (selected_file != ''):
+            self.save_file(selected_file)
 
 
 

@@ -151,8 +151,8 @@ if __name__ == '__main__':
     # f.run('test1.py.enc', 'Student Hack', 'test1234')
     #
     #f.importFile('Test.java', 'Student Hack', 'test1234', 'Test.java.enc')
-    print(f.readFile('Test.java.enc', 'Student Hack', 'test1234'))
-    f.run('Test.java.enc', 'Student Hack', 'test1234')
+    #print(f.readFile('Test.java.enc', 'Student Hack', 'test1234'))
+    #f.run('Test.java.enc', 'Student Hack', 'test1234')
     #
     # f.importFile('test.cpp', 'Student Hack', 'test1234', 'test.cpp.enc')
     # print(f.readFile('Test.java.enc', 'Student Hack', 'test1234'))
@@ -164,3 +164,4 @@ if __name__ == '__main__':
     #print(f.getOrganisationsList())
     # f.importFile('main.py', 'Student Hack', 'test1234')
     # print(f.readFile('main.py.enc', 'Student Hack', 'test1234'))
+    f.importFile('main.py', 'Test', 'test1234')
