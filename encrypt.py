@@ -1,7 +1,7 @@
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.primitives.asymmetric import padding
+from cryptography.hazmat.primitives.asymmetric import padding as a_padding
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives import padding
 import os
@@ -25,16 +25,16 @@ class Encrypt1:
         private_key = rsa.generate_private_key(public_exponent=65537,
         key_size=4096,
         backend=default_backend())
-        key = os.urandom(32)
-        iv = os.urandom(16)
+        key = self.encrypt_with_rsa(os.urandom(32), private_key)
+        iv = self.encrypt_with_rsa(os.urandom(16), private_key)
         # cipher = Cipher(algorithms.AES(key), modes.CBC(iv),
         # backend=default_backend())
         # key and iv will be used to construct the cipher
         return [private_key, (key, iv)]
 
     def encrypt_with_cipher(self, input):
-        key = self.aes_cipher[0]
-        iv = self.aes_cipher[1]
+        key = self.decrypt_with_rsa(self.aes_cipher[0])
+        iv = self.decrypt_with_rsa(self.aes_cipher[1])
         cipher = Cipher(algorithms.AES(key), modes.CBC(iv),
         backend=default_backend())
         encryptor = cipher.encryptor()
@@ -44,8 +44,8 @@ class Encrypt1:
         return encryptor.update(padder_data) + encryptor.finalize()
 
     def decrypt_with_cipher(self, input):
-        key = self.aes_cipher[0]
-        iv = self.aes_cipher[1]
+        key = self.decrypt_with_rsa(self.aes_cipher[0])
+        iv = self.decrypt_with_rsa(self.aes_cipher[1])
         cipher = Cipher(algorithms.AES(key), modes.CBC(iv),
         backend=default_backend())
         decryptor = cipher.decryptor()
@@ -57,18 +57,20 @@ class Encrypt1:
     def get_public_key(self):
         return self.private_key.public_key()
 
-    def encrypt_with_rsa(self, input):
+    def encrypt_with_rsa(self, input, key=None):
+        private_key = self.private_key if key == None else key
         return private_key.public_key().encrypt(input,
-        padding.OAEP(
-        mgf=padding.MGF1(algorithm=hashes.SHA256()),
+        a_padding.OAEP(
+        mgf=a_padding.MGF1(algorithm=hashes.SHA256()),
         algorithm=hashes.SHA256(),
         label=None
         ))
 
-    def decrypt_with_rsa(self, input):
-        return self.private_key(input,
-        padding.OAEP(
-        mgf=padding.MGF1(algorithm=hashes.SHA256()),
+    def decrypt_with_rsa(self, input, key=None):
+        private_key = self.private_key if key == None else key
+        return private_key.decrypt(input,
+        a_padding.OAEP(
+        mgf=a_padding.MGF1(algorithm=hashes.SHA256()),
         algorithm=hashes.SHA256(),
         label=None
         ))
