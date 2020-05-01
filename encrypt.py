@@ -3,6 +3,7 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+from cryptography.hazmat.primitives import padding
 import os
 #from cryptography.hazmat.primitives import serialization
 '''
@@ -17,6 +18,7 @@ class Encrypt1:
         self.keys = self.get_new_keys() if keys == None else keys
         self.private_key = self.keys[0]
         self.aes_cipher = self.keys[1]
+        self.block_size = 128
         # cipher.encryptor and cipher.decryptor
 
     def get_new_keys(self):
@@ -25,9 +27,32 @@ class Encrypt1:
         backend=default_backend())
         key = os.urandom(32)
         iv = os.urandom(16)
+        # cipher = Cipher(algorithms.AES(key), modes.CBC(iv),
+        # backend=default_backend())
+        # key and iv will be used to construct the cipher
+        return [private_key, (key, iv)]
+
+    def encrypt_with_cipher(self, input):
+        key = self.aes_cipher[0]
+        iv = self.aes_cipher[1]
         cipher = Cipher(algorithms.AES(key), modes.CBC(iv),
         backend=default_backend())
-        return [private_key, cipher]
+        encryptor = cipher.encryptor()
+        input = bytes(input, 'utf-8')
+        padder = padding.PKCS7(self.block_size).padder()
+        padder_data = padder.update(input) + padder.finalize()
+        return encryptor.update(padder_data) + encryptor.finalize()
+
+    def decrypt_with_cipher(self, input):
+        key = self.aes_cipher[0]
+        iv = self.aes_cipher[1]
+        cipher = Cipher(algorithms.AES(key), modes.CBC(iv),
+        backend=default_backend())
+        decryptor = cipher.decryptor()
+        unpadder = padding.PKCS7(self.block_size).unpadder()
+        padded_data = decryptor.update(input) + decryptor.finalize()
+        return (unpadder.update(padded_data) + unpadder.finalize()).decode('utf-8')
+
 
     def get_public_key(self):
         return self.private_key.public_key()
