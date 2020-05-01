@@ -286,7 +286,7 @@ class Application(object):
                 decrypted_file.close()
                 self.fs.createFile(selected_file.name, Application.organisation,
                 Application.password, decrypted_contents)
-                self.currentFile = selected_file.name
+                self.currentFile = selected_file.name + '.enc'
                 self.editor.delete(1.0, END)
                 self.editor.insert(END, decrypted_contents)
 
