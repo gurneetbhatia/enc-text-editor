@@ -203,7 +203,6 @@ class CustomText(Text):
                     self.stack = self.stack[1:]
                 self.queue = []
                 self.stack.append(self.get("1.0", END))
-            print(self.stack)
 
     def check_if_saved(self):
         return self.saved == self.get(1.0, END)
@@ -230,9 +229,8 @@ class CustomText(Text):
         edit.add_command(label="Undo", command=self.undo)
         edit.add_command(label="Redo", command=self.redo)
         edit_lines = Menu(edit)
-        edit_lines.add_command(label="Indent")
-        edit_lines.add_command(label="Outdent")
-        edit_lines.add_command(label="Autodent")
+        edit_lines.add_command(label="Indent", command=self.indent)
+        edit_lines.add_command(label="Outdent", command=self.outdent)
         edit_lines.add_command(label="Move line up")
         edit_lines.add_command(label="Move line down")
         edit_lines.add_command(label="Duplicate Lines")
@@ -395,16 +393,6 @@ class CustomText(Text):
         out_lines = '\n'.join(output)+'\n' if len(output) > 1 else output[0]
         self.insert(start_line, out_lines)
 
-    def get_selected_lines_indices(self):
-        try:
-            start_line = self.index(SEL_FIRST).split('.')[0]+".0"
-            last_line = str(int(self.index(SEL_LAST).split('.')[0])+1)+".0"
-            return start_line, last_line
-        except:
-            start_line = self.index('insert linestart')
-            last_line = self.index('insert lineend')
-            return start_line, last_line
-
     def add_comments(self, lines):
         # append a '# ' at the start of each line
         return list(map(lambda line: '# '+line, lines))
@@ -426,6 +414,37 @@ class CustomText(Text):
             self.queue = self.queue[1:]
             self.insert("1.0", state)
             self.stack.append(state)
+
+    def indent(self):
+        start_line, last_line = self.get_selected_lines_indices()
+        lines = self.get(start_line, last_line).split('\n')
+        #lines = lines[1:] if len(lines) > 1 else lines
+
+        output = list(map(lambda line: "\t"+line, lines))
+        self.delete(start_line, last_line)
+        out_lines = '\n'.join(output)+'\n' if len(output) > 1 else output[0]
+        self.insert(start_line, out_lines)
+
+    def outdent(self):
+        start_line, last_line = self.get_selected_lines_indices()
+        lines = self.get(start_line, last_line).split('\n')
+        print(lines)
+        #lines =
+        output = list(map(lambda line: line[1:] if line[0]=='\t' else line,
+        list(filter(lambda line: len(line) > 0, lines))))
+        self.delete(start_line, last_line)
+        out_lines = '\n'.join(output)+'\n' if len(output) > 1 else output[0]
+        self.insert(start_line, out_lines)
+
+    def get_selected_lines_indices(self):
+        try:
+            start_line = self.index(SEL_FIRST).split('.')[0]+".0"
+            last_line = str(int(self.index(SEL_LAST).split('.')[0])+1)+".0"
+            return start_line, last_line
+        except:
+            start_line = self.index('insert linestart')
+            last_line = self.index('insert lineend')
+            return start_line, last_line
 
     def login(self):
         # prompt the user for an organisation name and password
@@ -459,30 +478,6 @@ class CustomText(Text):
 
         # return what the actual widget returned
         return result
-
-# class Example(Frame):
-#     def __init__(self, *args, **kwargs):
-#         Frame.__init__(self, *args, **kwargs)
-#         self.text = CustomText(self)
-#         self.vsb = Scrollbar(orient="vertical", command=self.text.yview)
-#         #self.text.configure(yscrollcommand=self.vsb.set)
-#         #self.text.tag_configure("bigfont", font=("Helvetica", "24", "bold"))
-#         self.linenumbers = TextLineNumbers(self, width=30)
-#         self.linenumbers.attach(self.text)
-#
-#         self.vsb.pack(side="right", fill="y")
-#         self.linenumbers.pack(side="left", fill="y")
-#         self.text.pack(side="right", fill="both", expand=True)
-#
-#         self.text.bind("<<Change>>", self._on_change)
-#         self.text.bind("<Configure>", self._on_change)
-#
-#         #self.text.insert("end", "one\ntwo\nthree\n")
-#         #self.text.insert("end", "four\n",("bigfont",))
-#         #self.text.insert("end", "five\n")
-#
-#     def _on_change(self, event):
-#         self.linenumbers.redraw()
 
 
 if __name__ == '__main__':
