@@ -186,6 +186,10 @@ class CustomText(Text):
 
         self.bind("<<Change>>", self._on_change)
         self.bind("<Configure>", self._on_change)
+        self.bind("<KeyRelease>", self._on_change)
+
+        self.stack = []
+        self.queue = []
 
         self.saved = False
         self.fs = FileSystem()
@@ -193,29 +197,12 @@ class CustomText(Text):
 
     def _on_change(self, event):
         self.linenumbers.redraw()
+        if str(event.type) == "KeyRelease":
+            print(event)
+            self.stack.append(self.get(1.0, END))
 
-    def get_words(self, text):
-        return get_words
-
-    def text_changed(self, event):
-        if((event.keycode >= 97 and event.keycode <= 122) or
-        (event.keycode >= 65 and event.keycode <= 90)):
-            editor_text = self.get("1.0", END)
-            line = self.get('end - 1 lines linestart', 'end - 1 lines lineend')
-            line_num = self.index(INSERT)
-            line_num_start = float(line_num.split('.')[0]+".0")
-
-            print(line_num, line)
-            line_data = getColours(line)
-            print(line_data)
-            for datapoint in line_data:
-                if datapoint[1] != '':
-                    word_start_index = line_num_start + float('0.'+(str(datapoint[0])))
-                    word_end_index = line_num_start + float('0.'+(str(datapoint[1]+1)))
-                    colour = datapoint[2]
-                    print('(',word_start_index,', ',word_end_index,'): '+colour)
-                    self.tag_add(str(datapoint[3]), str(word_start_index), str(word_end_index))
-                    self.tag_config(str(datapoint[3]), foreground=colour)
+    def check_if_saved(self):
+        return self.saved == self.get(1.0, END)
 
     def init_menu(self):
         menu = Menu(self.master)
@@ -236,8 +223,8 @@ class CustomText(Text):
         edit.add_command(label="Paste", command=self.paste)
         edit.add_command(label="Copy Path", command=self.copy_file_path)
         edit.add_command(label="Toggle Comments", command=self.toggle_comments)
-        edit.add_command(label="Undo")
-        edit.add_command(label="Redo")
+        edit.add_command(label="Undo", command=self.undo)
+        edit.add_command(label="Redo", command=self.redo)
         edit_lines = Menu(edit)
         edit_lines.add_command(label="Indent")
         edit_lines.add_command(label="Outdent")
@@ -352,11 +339,13 @@ class CustomText(Text):
             # has to be saved as an enc file
             if (not self.saved):
                 editor_text = self.get("1.0", END)
+                self.saved = editor_text
                 if (self.currentFile == None and filename == None):
                     self.save_file_as()
                 else:
                     selected_file = self.currentFile if filename == None else filename
                     if (selected_file != None):
+                        self.queue = []
                         self.fs.updateFile(selected_file,
                         editor_text,
                         Application.organisation,
@@ -387,8 +376,9 @@ class CustomText(Text):
 
     def toggle_comments(self):
         start_line, last_line = self.get_selected_lines_indices()
-        lines = self.get(start_line, last_line).split('\n')[:-1]
-        print(lines)
+        lines = self.get(start_line, last_line).split('\n')
+        lines = lines[1:] if len(lines) > 1 else lines
+        print('here',start_line, last_line)
         # if there is a single uncommented line, comment every line
         # otherwise uncomment every line
         contains_normal = False
@@ -402,7 +392,8 @@ class CustomText(Text):
         print(contains_normal)
         output = self.add_comments(lines) if contains_normal else self.remove_comments(lines)
         self.delete(start_line, last_line)
-        self.insert(start_line, '\n'.join(output)+'\n')
+        out_lines = '\n'.join(output)+'\n' if len(output) > 1 else output[0]
+        self.insert(start_line, out_lines)
 
     def get_selected_lines_indices(self):
         try:
@@ -410,7 +401,11 @@ class CustomText(Text):
             last_line = str(int(self.index(SEL_LAST).split('.')[0])+1)+".0"
             return start_line, last_line
         except:
-            print("No Text Selected!")
+            start_line = self.index('insert linestart')
+            last_line = self.index('insert lineend')
+            print(start_line, last_line)
+            #print("No lines selected")
+            return start_line, last_line
 
     def add_comments(self, lines):
         # append a '# ' at the start of each line
@@ -418,6 +413,21 @@ class CustomText(Text):
 
     def remove_comments(self, lines):
         return list(map(lambda line: line[2:] if line[:2] == '# ' else line, lines))
+
+    def undo(self):
+        if len(self.stack) > 0:
+            self.delete("1.0", END)
+            state = self.stack.pop()
+            self.insert("1.0", state)
+            self.queue = [state] + self.queue
+
+    def redo(self):
+        if len(self.queue) > 0:
+            self.delete("1.0", END)
+            state = self.queue[0]
+            self.queue = self.queue[1:]
+            self.insert("1.0", state)
+            self.stack.append(state)
 
     def login(self):
         # prompt the user for an organisation name and password
