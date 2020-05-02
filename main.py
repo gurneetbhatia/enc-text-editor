@@ -235,7 +235,7 @@ class CustomText(Text):
         edit.add_command(label="Copy", command=self.copy)
         edit.add_command(label="Paste", command=self.paste)
         edit.add_command(label="Copy Path", command=self.copy_file_path)
-        edit.add_command(label="Toggle Comments")
+        edit.add_command(label="Toggle Comments", command=self.toggle_comments)
         edit.add_command(label="Undo")
         edit.add_command(label="Redo")
         edit_lines = Menu(edit)
@@ -385,6 +385,39 @@ class CustomText(Text):
         if self.currentFile != None:
             pyperclip.copy(self.currentFile)
 
+    def toggle_comments(self):
+        start_line, last_line = self.get_selected_lines_indices()
+        lines = self.get(start_line, last_line).split('\n')[:-1]
+        print(lines)
+        # if there is a single uncommented line, comment every line
+        # otherwise uncomment every line
+        contains_normal = False
+        for line in lines:
+            first_char = line[len(line) - len(line.lstrip())]
+            print(line)
+            print(first_char)
+            if first_char != '#':
+                contains_normal = True
+                break
+        print(contains_normal)
+        output = self.add_comments(lines) if contains_normal else self.remove_comments(lines)
+        self.delete(start_line, last_line)
+        self.insert(start_line, '\n'.join(output)+'\n')
+
+    def get_selected_lines_indices(self):
+        try:
+            start_line = self.index(SEL_FIRST).split('.')[0]+".0"
+            last_line = str(int(self.index(SEL_LAST).split('.')[0])+1)+".0"
+            return start_line, last_line
+        except:
+            print("No Text Selected!")
+
+    def add_comments(self, lines):
+        # append a '# ' at the start of each line
+        return list(map(lambda line: '# '+line, lines))
+
+    def remove_comments(self, lines):
+        return list(map(lambda line: line[2:] if line[:2] == '# ' else line, lines))
 
     def login(self):
         # prompt the user for an organisation name and password
