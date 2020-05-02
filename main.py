@@ -117,17 +117,6 @@ class Application(Frame):
         self.master = master
         self.master.title("Molecule")
 
-        # self.init_menu()
-        # self.editor = Text(self.master,
-        # width=WINDOW_WIDTH,
-        # height=WINDOW_HEIGHT,
-        # highlightthickness=0,
-        # padx=20,
-        # pady=20,
-        # fg="white",
-        # background="#292C33")
-        # self.editor.pack()
-
         self.editor = CustomText(self.master,
         width=WINDOW_WIDTH,
         height=WINDOW_HEIGHT,
@@ -136,11 +125,6 @@ class Application(Frame):
         pady=20,
         fg='white',
         background='#292C33')
-        # self.linenumbers = TextLineNumbers(self.master,
-        # width=30,
-        # highlightthickness=0,
-        # background='#292C33')
-        # self.linenumbers.attach(self.editor)
 
         self.editor.linenumbers.pack(side='left', fill='y')
         self.editor.pack(side='right', fill=BOTH, expand=True)
@@ -402,7 +386,11 @@ class CustomText(Text):
     def _proxy(self, *args):
         # let the actual widget perform the requested action
         cmd = (self._orig,) + args
-        result = self.tk.call(cmd)
+        result = None
+        try:
+            result = self.tk.call(cmd)
+        except Exception:
+            print("Some Exception")
 
         # generate an event if something was added or deleted,
         # or the cursor position changed
