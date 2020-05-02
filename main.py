@@ -111,12 +111,13 @@ class Application(Frame):
 
     organisation = None
     password = None
+    localkeys_dir = None
 
     def __init__(self, master):
         self.master = master
         self.master.title("Molecule")
 
-        self.init_menu()
+        # self.init_menu()
         # self.editor = Text(self.master,
         # width=WINDOW_WIDTH,
         # height=WINDOW_HEIGHT,
@@ -135,30 +136,80 @@ class Application(Frame):
         pady=20,
         fg='white',
         background='#292C33')
-        self.linenumbers = TextLineNumbers(self.master,
-        width=30,
-        highlightthickness=0,
-        background='#292C33')
-        self.linenumbers.attach(self.editor)
+        # self.linenumbers = TextLineNumbers(self.master,
+        # width=30,
+        # highlightthickness=0,
+        # background='#292C33')
+        # self.linenumbers.attach(self.editor)
 
-        self.linenumbers.pack(side='left', fill='y')
+        self.editor.linenumbers.pack(side='left', fill='y')
         self.editor.pack(side='right', fill=BOTH, expand=True)
 
-        self.editor.bind("<<Change>>", self._on_change)
-        self.editor.bind("<Configure>", self._on_change)
+        # self.editor.bind("<<Change>>", self._on_change)
+        # self.editor.bind("<Configure>", self._on_change)
 
         #self.master.bind('<KeyRelease>', self.text_changed)
 
         # represents whether the current text in the editor is saved or not
-        self.saved = False
+        # self.saved = False
 
-        self.localkeys_dir = self.get_localkeys_dir()
-
-        self.fs = FileSystem(self.localkeys_dir)
+        # Application.localkeys_dir = self.get_localkeys_dir()
+        #
+        # self.fs = FileSystem(Application.localkeys_dir)
 
         Application.organisation = None
         Application.password = None
+        Application.localkeys_dir = self.get_localkeys_dir()
 
+        # self.currentFile = None
+
+    def get_localkeys_dir(self):
+        localkeys_dir = filedialog.askdirectory(initialdir="./localkeys")
+        return localkeys_dir if localkeys_dir != None else "localkeys"
+
+
+class TextLineNumbers(Canvas):
+    def __init__(self, *args, **kwargs):
+        Canvas.__init__(self, *args, **kwargs)
+        self.textwidget = None
+
+    def attach(self, text_widget):
+        self.textwidget = text_widget
+
+    def redraw(self, *args):
+        '''redraw line numbers'''
+        self.delete("all")
+
+        i = self.textwidget.index("@0,0")
+        while True :
+            dline= self.textwidget.dlineinfo(i)
+            if dline is None: break
+            y = dline[1]
+            linenum = str(i).split(".")[0]
+            self.create_text(2,y,anchor="nw", text=linenum, fill='#435D61')
+            i = self.textwidget.index("%s+1line" % i)
+
+class CustomText(Text):
+    def __init__(self, *args, **kwargs):
+        Text.__init__(self, *args, **kwargs)
+
+        # create a proxy for the underlying widget
+        self._orig = self._w + "_orig"
+        self.tk.call("rename", self._w, self._orig)
+        self.tk.createcommand(self._w, self._proxy)
+        self.init_menu()
+
+        self.linenumbers = TextLineNumbers(self.master,
+        width=30,
+        highlightthickness=0,
+        background='#292C33')
+        self.linenumbers.attach(self)
+
+        self.bind("<<Change>>", self._on_change)
+        self.bind("<Configure>", self._on_change)
+
+        self.saved = False
+        self.fs = FileSystem(Application.localkeys_dir)
         self.currentFile = None
 
     def _on_change(self, event):
@@ -170,13 +221,13 @@ class Application(Frame):
     def text_changed(self, event):
         if((event.keycode >= 97 and event.keycode <= 122) or
         (event.keycode >= 65 and event.keycode <= 90)):
-            editor_text = self.editor.get("1.0", END)
-            #self.editor.tag_add("import", "1.0", "1.6")
-            #self.editor.tag_config("import", foreground="blue")
+            editor_text = self.get("1.0", END)
+            #self.tag_add("import", "1.0", "1.6")
+            #self.tag_config("import", foreground="blue")
             #lines = editor_text.split('\n')[:-1]
             #print(lines)
-            line = self.editor.get('end - 1 lines linestart', 'end - 1 lines lineend')
-            line_num = self.editor.index(INSERT)
+            line = self.get('end - 1 lines linestart', 'end - 1 lines lineend')
+            line_num = self.index(INSERT)
             line_num_start = float(line_num.split('.')[0]+".0")
 
             print(line_num, line)
@@ -188,12 +239,8 @@ class Application(Frame):
                     word_end_index = line_num_start + float('0.'+(str(datapoint[1]+1)))
                     colour = datapoint[2]
                     print('(',word_start_index,', ',word_end_index,'): '+colour)
-                    self.editor.tag_add(str(datapoint[3]), str(word_start_index), str(word_end_index))
-                    self.editor.tag_config(str(datapoint[3]), foreground=colour)
-
-    def get_localkeys_dir(self):
-        localkeys_dir = filedialog.askdirectory(initialdir="./localkeys")
-        return localkeys_dir if localkeys_dir != None else "localkeys"
+                    self.tag_add(str(datapoint[3]), str(word_start_index), str(word_end_index))
+                    self.tag_config(str(datapoint[3]), foreground=colour)
 
     def init_menu(self):
         menu = Menu(self.master)
@@ -280,8 +327,8 @@ class Application(Frame):
                     Application.password)
                     print(decrypted_contents)
                     self.currentFile = selected_file.name
-                    self.editor.delete(1.0, END)
-                    self.editor.insert(END, decrypted_contents)
+                    self.delete(1.0, END)
+                    self.insert(END, decrypted_contents)
                 except ValueError:
                     messagebox.showerror('Error',
                     'Credentials Invalid for the selected file')
@@ -310,8 +357,8 @@ class Application(Frame):
                 self.fs.createFile(selected_file.name, Application.organisation,
                 Application.password, decrypted_contents)
                 self.currentFile = selected_file.name + '.enc'
-                self.editor.delete(1.0, END)
-                self.editor.insert(END, decrypted_contents)
+                self.delete(1.0, END)
+                self.insert(END, decrypted_contents)
 
     def save_file(self, filename=None):
         # if filename not provided, save contents to currentFile
@@ -321,7 +368,7 @@ class Application(Frame):
             # ask the user for a filepath
             # has to be saved as an enc file
             if (not self.saved):
-                editor_text = self.editor.get("1.0", END)
+                editor_text = self.get("1.0", END)
                 if (self.currentFile == None and filename == None):
                     self.save_file_as()
                 else:
@@ -344,44 +391,13 @@ class Application(Frame):
 
     def login(self):
         # prompt the user for an organisation name and password
-        self.editor.configure(state=DISABLED)
-        popup = LoginOrganisationCredentials(self.master, self.localkeys_dir, self.editor)
+        self.configure(state=DISABLED)
+        popup = LoginOrganisationCredentials(self.master, Application.localkeys_dir, self)
 
     def create_organisation(self):
         # prompt the user for an organisation name and password
-        self.editor.configure(state=DISABLED)
-        popup = CreateOrganisationCredentials(self.master, self.localkeys_dir, self.editor)
-
-
-class TextLineNumbers(Canvas):
-    def __init__(self, *args, **kwargs):
-        Canvas.__init__(self, *args, **kwargs)
-        self.textwidget = None
-
-    def attach(self, text_widget):
-        self.textwidget = text_widget
-
-    def redraw(self, *args):
-        '''redraw line numbers'''
-        self.delete("all")
-
-        i = self.textwidget.index("@0,0")
-        while True :
-            dline= self.textwidget.dlineinfo(i)
-            if dline is None: break
-            y = dline[1]
-            linenum = str(i).split(".")[0]
-            self.create_text(2,y,anchor="nw", text=linenum, fill='#435D61')
-            i = self.textwidget.index("%s+1line" % i)
-
-class CustomText(Text):
-    def __init__(self, *args, **kwargs):
-        Text.__init__(self, *args, **kwargs)
-
-        # create a proxy for the underlying widget
-        self._orig = self._w + "_orig"
-        self.tk.call("rename", self._w, self._orig)
-        self.tk.createcommand(self._w, self._proxy)
+        self.configure(state=DISABLED)
+        popup = CreateOrganisationCredentials(self.master, Application.localkeys_dir, self)
 
     def _proxy(self, *args):
         # let the actual widget perform the requested action
