@@ -186,7 +186,7 @@ class CustomText(Text):
 
         self.bind("<<Change>>", self._on_change)
         self.bind("<Configure>", self._on_change)
-        self.bind("<KeyRelease>", self._on_change)
+        self.bind("<Key>", self._on_change)
 
         self.stack = []
         self.queue = []
@@ -197,9 +197,13 @@ class CustomText(Text):
 
     def _on_change(self, event):
         self.linenumbers.redraw()
-        if str(event.type) == "KeyRelease":
-            print(event)
-            self.stack.append(self.get(1.0, END))
+        if str(event.type) == "KeyPress":
+            if len(self.stack) == 0 or self.get(1.0, END) != self.stack[-1]:
+                if len(self.stack) > 20:
+                    self.stack = self.stack[1:]
+                self.queue = []
+                self.stack.append(self.get("1.0", END))
+            print(self.stack)
 
     def check_if_saved(self):
         return self.saved == self.get(1.0, END)
@@ -378,18 +382,14 @@ class CustomText(Text):
         start_line, last_line = self.get_selected_lines_indices()
         lines = self.get(start_line, last_line).split('\n')
         lines = lines[1:] if len(lines) > 1 else lines
-        print('here',start_line, last_line)
         # if there is a single uncommented line, comment every line
         # otherwise uncomment every line
         contains_normal = False
         for line in lines:
             first_char = line[len(line) - len(line.lstrip())]
-            print(line)
-            print(first_char)
             if first_char != '#':
                 contains_normal = True
                 break
-        print(contains_normal)
         output = self.add_comments(lines) if contains_normal else self.remove_comments(lines)
         self.delete(start_line, last_line)
         out_lines = '\n'.join(output)+'\n' if len(output) > 1 else output[0]
@@ -403,8 +403,6 @@ class CustomText(Text):
         except:
             start_line = self.index('insert linestart')
             last_line = self.index('insert lineend')
-            print(start_line, last_line)
-            #print("No lines selected")
             return start_line, last_line
 
     def add_comments(self, lines):
