@@ -371,7 +371,7 @@ class TextLineNumbers(Canvas):
             if dline is None: break
             y = dline[1]
             linenum = str(i).split(".")[0]
-            self.create_text(2,y,anchor="nw", text=linenum, fill='white')
+            self.create_text(2,y,anchor="nw", text=linenum, fill='#435D61')
             i = self.textwidget.index("%s+1line" % i)
 
 class CustomText(Text):
