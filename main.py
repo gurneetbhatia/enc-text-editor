@@ -1,9 +1,10 @@
 from tkinter import *
 from tkinter import filedialog
 from tkinter import messagebox
-from filesystem import FileSystem
 from pygments import lex
 from pygments.lexers import PythonLexer
+import pyperclip
+from filesystem import FileSystem
 from lexer import *
 
 # constants are declared here
@@ -120,17 +121,6 @@ class Application(Frame):
         self.master.title("Molecule")
         Application.root = self.master
 
-        # self.editor = CustomText(self.master,
-        # width=WINDOW_WIDTH,
-        # height=WINDOW_HEIGHT,
-        # highlightthickness=0,
-        # padx=20,
-        # pady=20,
-        # fg='white',
-        # background='#292C33')
-        #
-        # self.editor.linenumbers.pack(side='left', fill='y')
-        # self.editor.pack(side='right', fill=BOTH, expand=True)
         Application.localkeys_dir = self.get_localkeys_dir()
 
         window = Application.open_new_editor_window(
@@ -240,14 +230,14 @@ class CustomText(Text):
         menu.add_cascade(label="File", menu=file)
 
         edit = Menu(menu)
+        edit.add_command(label="Select All", command=self.select_all)
+        edit.add_command(label="Cut", command=self.cut)
+        edit.add_command(label="Copy", command=self.copy)
+        edit.add_command(label="Paste", command=self.paste)
+        edit.add_command(label="Copy Path", command=self.copy_file_path)
+        edit.add_command(label="Toggle Comments")
         edit.add_command(label="Undo")
         edit.add_command(label="Redo")
-        edit.add_command(label="Cut")
-        edit.add_command(label="Copy")
-        edit.add_command(label="Copy Path")
-        edit.add_command(label="Paste")
-        edit.add_command(label="Select All")
-        edit.add_command(label="Toggle Comments")
         edit_lines = Menu(edit)
         edit_lines.add_command(label="Indent")
         edit_lines.add_command(label="Outdent")
@@ -379,7 +369,21 @@ class CustomText(Text):
         if (selected_file != ''):
             self.save_file(selected_file)
 
+    def select_all(self):
+        self.event_generate("<<SelectAll>>")
 
+    def cut(self):
+        self.event_generate("<<Cut>>")
+
+    def copy(self):
+        self.event_generate("<<Copy>>")
+
+    def paste(self):
+        self.event_generate("<<Paste>>")
+
+    def copy_file_path(self):
+        if self.currentFile != None:
+            pyperclip.copy(self.currentFile)
 
 
     def login(self):
