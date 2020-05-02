@@ -112,40 +112,43 @@ class Application(Frame):
     organisation = None
     password = None
     localkeys_dir = None
+    windows = []
+    root = None
 
     def __init__(self, master):
         self.master = master
         self.master.title("Molecule")
+        Application.root = self.master
 
-        self.editor = CustomText(self.master,
+        # self.editor = CustomText(self.master,
+        # width=WINDOW_WIDTH,
+        # height=WINDOW_HEIGHT,
+        # highlightthickness=0,
+        # padx=20,
+        # pady=20,
+        # fg='white',
+        # background='#292C33')
+        #
+        # self.editor.linenumbers.pack(side='left', fill='y')
+        # self.editor.pack(side='right', fill=BOTH, expand=True)
+        Application.localkeys_dir = self.get_localkeys_dir()
+
+        window = Application.open_new_editor_window(
         width=WINDOW_WIDTH,
         height=WINDOW_HEIGHT,
         highlightthickness=0,
         padx=20,
-        pady=20,
+        pady=10,
         fg='white',
         background='#292C33')
+        Application.windows.append(window)
 
-        self.editor.linenumbers.pack(side='left', fill='y')
-        self.editor.pack(side='right', fill=BOTH, expand=True)
-
-        # self.editor.bind("<<Change>>", self._on_change)
-        # self.editor.bind("<Configure>", self._on_change)
-
-        #self.master.bind('<KeyRelease>', self.text_changed)
-
-        # represents whether the current text in the editor is saved or not
-        # self.saved = False
-
-        # Application.localkeys_dir = self.get_localkeys_dir()
-        #
-        # self.fs = FileSystem(Application.localkeys_dir)
-
-        Application.organisation = None
-        Application.password = None
-        Application.localkeys_dir = self.get_localkeys_dir()
-
-        # self.currentFile = None
+    def open_new_editor_window(*args, **kwargs):
+        master = Toplevel(Application.root) if len(Application.windows) > 0 else Application.root
+        editor = CustomText(master, *args, **kwargs)
+        editor.linenumbers.pack(side='left', fill='y')
+        editor.pack(side='right', fill=BOTH, expand=True)
+        return editor
 
     def get_localkeys_dir(self):
         localkeys_dir = filedialog.askdirectory(initialdir="./localkeys")
@@ -177,6 +180,8 @@ class CustomText(Text):
     def __init__(self, *args, **kwargs):
         Text.__init__(self, *args, **kwargs)
 
+        self.master = args[0]
+
         # create a proxy for the underlying widget
         self._orig = self._w + "_orig"
         self.tk.call("rename", self._w, self._orig)
@@ -193,7 +198,7 @@ class CustomText(Text):
         self.bind("<Configure>", self._on_change)
 
         self.saved = False
-        self.fs = FileSystem(Application.localkeys_dir)
+        self.fs = FileSystem()
         self.currentFile = None
 
     def _on_change(self, event):
@@ -206,10 +211,6 @@ class CustomText(Text):
         if((event.keycode >= 97 and event.keycode <= 122) or
         (event.keycode >= 65 and event.keycode <= 90)):
             editor_text = self.get("1.0", END)
-            #self.tag_add("import", "1.0", "1.6")
-            #self.tag_config("import", foreground="blue")
-            #lines = editor_text.split('\n')[:-1]
-            #print(lines)
             line = self.get('end - 1 lines linestart', 'end - 1 lines lineend')
             line_num = self.index(INSERT)
             line_num_start = float(line_num.split('.')[0]+".0")
@@ -280,7 +281,15 @@ class CustomText(Text):
 
     def new_file(self):
         # open a new tab/window of the editor
-        pass
+        print(self.master)
+        window = Application.open_new_editor_window(width=WINDOW_WIDTH,
+        height=WINDOW_HEIGHT,
+        highlightthickness=0,
+        padx=20,
+        pady=10,
+        fg='white',
+        background='#292C33')
+        Application.windows.append(window)
 
     def load_file(self):
         # ask the user to select a file
