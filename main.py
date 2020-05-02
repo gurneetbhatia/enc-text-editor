@@ -414,10 +414,10 @@ class CustomText(Text):
 
     def undo(self):
         if len(self.stack) > 0:
+            self.queue = [self.get("1.0", END)] + self.queue
             self.delete("1.0", END)
             state = self.stack.pop()
             self.insert("1.0", state)
-            self.queue = [state] + self.queue
 
     def redo(self):
         if len(self.queue) > 0:
